@@ -2,16 +2,16 @@ function Get-RDPEventsForUser ($server, $user,$daysToGoBack)
 {
 	If (!($daysToGoBack))
 	{
-		Get-WinEvent -ComputerName $server -LogName Microsoft-Windows-TerminalServices-LocalSessionManager/Operational | Where {$_.ID -match "21|23|24|25" -and $_.Message -match "$user"}
+		Get-WinEvent -ComputerName $server -LogName Microsoft-Windows-TerminalServices-LocalSessionManager/OperatiWhere-Object| <BS><BS><BS><BS><BS><BS><BS><BS>_.ID -match "21|23|24|25" -and $_.Message -match "$user"
 	}
 	Else
 	{
 		$startDate = (Get-Date) - (New-TimeSpan -Days $daysToGoBack)
-		Get-WinEvent -ComputerName $server -LogName Microsoft-Windows-TerminalServices-LocalSessionManager/Operational | Where {$_.ID -match "21|23|24|25" -and $_.Message -match "$user" -and $_.TimeCreated -ge $startDate}
+		Get-WinEvent -ComputerName $server -LogName Microsoft-Windows-TerminalServices-LocalSessionManager/Operational | Where-Object {$_.ID -match "21|23|24|25" -and $_.Message -match "$user" -and $_.TimeCreated -ge $startDate}
 	}
 }
 
-Function Trigger-WindowsFeatureInstall($serverName,$windowsFeatureName)
+Function Invoke-WindowsFeatureInstall($serverName,$windowsFeatureName)
     {
         $Error.Clear()
         $WindowsFeatures = Invoke-Command -ComputerName $servername { param ($windowsFeatureName);Get-WindowsFeature $windowsFeatureName } -ArgumentList $windowsFeatureName
@@ -38,7 +38,7 @@ Function Trigger-WindowsFeatureInstall($serverName,$windowsFeatureName)
     }
 
 
-Function Trigger-WindowsFeatureUnInstall($serverName,$windowsFeatureName)
+Function Invoke-WindowsFeatureUnInstall($serverName,$windowsFeatureName)
     {
         $Error.Clear()
         $WindowsFeatures = Invoke-Command -ComputerName $servername { param ($windowsFeatureName);Get-WindowsFeature $windowsFeatureName } -ArgumentList $windowsFeatureName
@@ -66,14 +66,14 @@ Function Trigger-WindowsFeatureUnInstall($serverName,$windowsFeatureName)
     
     Function Get-CustomWarnErrEventByIndex($server,$eventLog,$previousIndexValue,$eventIndexFile,$serverEventsFile)
     {
-        $events = Invoke-Command -ComputerName $server { param($eventlog,$previousIndexValue);Get-EventLog -LogName $eventLog -EntryType Warning,Error | where {$_.Index -gt $previousIndexValue} } -ArgumentList $eventLog,$previousIndexValue
+        $events = Invoke-Command -ComputerName $server { param($eventlog,$previousIndexValue);Get-EventLog -LogName $eventLog -EntryType Warning,Error | Where-Object {$_.Index -gt $previousIndexValue} } -ArgumentList $eventLog,$previousIndexValue
         If ($events)
             {
                 If ($eventIndexFile)
                     {
-                        $lastEvent = $events | Select -First 1
+                        $lastEvent = $events | Select-Object -First 1
                         $lastIndexLogged = $lastEvent.Index
-                        $events | Where {$_.Source -ne 'LsaSrv' -and $_.EventID -ne 6037} | Sort TimeGenerated | Export-Csv -Path $serverEventsFile -NoTypeInformation -Append
+                        $events | Where-Object {$_.Source -ne 'LsaSrv' -and $_.EventID -ne 6037} | Sort-Object TimeGenerated | Export-Csv -Path $serverEventsFile -NoTypeInformation -Append
                         Set-Content -Path $eventIndexFile -Value "$lastIndexLogged,$eventLog"
                     }
                 Else
@@ -104,7 +104,7 @@ Function Trigger-WindowsFeatureUnInstall($serverName,$windowsFeatureName)
                         Invoke-Command -ComputerName $server `
                                                         { 
                                                             param($Log,$AfterDateTime)
-                                                            Get-EventLog -LogName $Log -After $AfterDateTime | Where {$_.EntryType -match "Warning|Critical"} | Group EntryType,Source | Sort Count -Descending | FT -AutoSize `
+                                                            Get-EventLog -LogName $Log -After $AfterDateTime | Where-Object {$_.EntryType -match "Warning|Critical"} | Group EntryType,Source | Sort-Object Count -Descending | Format-Table -AutoSize `
                                                         } -ArgumentList $Log,$AfterDateTime
                                                         Clear-Variable serverName
                     }
@@ -113,14 +113,14 @@ Function Trigger-WindowsFeatureUnInstall($serverName,$windowsFeatureName)
 
 Function Get-CustomWarnErrEventByIndex($server,$eventLog,$previousIndexValue,$eventIndexFile,$serverEventsFile)
     {
-        $events = Invoke-Command -ComputerName $server { param($eventlog,$previousIndexValue);Get-EventLog -LogName $eventLog -EntryType Warning,Error | where {$_.Index -gt $previousIndexValue} } -ArgumentList $eventLog,$previousIndexValue
+        $events = Invoke-Command -ComputerName $server { param($eventlog,$previousIndexValue);Get-EventLog -LogName $eventLog -EntryType Warning,Error | Where-Object {$_.Index -gt $previousIndexValue} } -ArgumentList $eventLog,$previousIndexValue
         If ($events)
             {
                 If ($eventIndexFile)
                     {
-                        $lastEvent = $events | Select -First 1
+                        $lastEvent = $events | Select-Object -First 1
                         $lastIndexLogged = $lastEvent.Index
-                        $events | Where {$_.Source -ne 'LsaSrv' -and $_.EventID -ne 6037} | Sort TimeGenerated | Export-Csv -Path $serverEventsFile -NoTypeInformation -Append
+                        $events | Where-Object {$_.Source -ne 'LsaSrv' -and $_.EventID -ne 6037} | Sort-Object TimeGenerated | Export-Csv -Path $serverEventsFile -NoTypeInformation -Append
                         Set-Content -Path $eventIndexFile -Value "$lastIndexLogged,$eventLog"
                     }
                 Else
@@ -148,7 +148,7 @@ Function Get-CustomWarnErrEventByIndex($server,$eventLog,$previousIndexValue,$ev
                 [array]$ServerRebootEvents = Invoke-Command -ComputerName $server `
                                     { 
                                         param($afterDate)
-                                        Get-EventLog -LogName System -After $afterDate | where {$_.EventID -eq 6009}
+                                        Get-EventLog -LogName System -After $afterDate | Where-Object {$_.EventID -eq 6009}
                                     } -ArgumentList $afterDate
                 If (!($ServerRebootEvents))
                     {
@@ -171,7 +171,7 @@ Function Get-CustomWarnErrEventByIndex($server,$eventLog,$previousIndexValue,$ev
             {
                 Write-Host $server -ForegroundColor Green
                 Write-Host "---------"
-                $logicalDisks = Get-WmiObject -ComputerName $server Win32_LogicalDisk | where {$_.DriveType -eq 3}
+                $logicalDisks = Get-WmiObject -ComputerName $server Win32_LogicalDisk | Where-Object {$_.DriveType -eq 3}
                 foreach ($logicalDisk in $logicalDisks) 
                     { 
                         $driveSize = $logicalDisk.Size
@@ -213,7 +213,7 @@ Function Get-CustomWarnErrEventByIndex($server,$eventLog,$previousIndexValue,$ev
                                                         { 
                                                            param($afterDate,$svcDisplayName)
                                                            Get-EventLog -LogName System -After $afterDate -Source "Service Control Manager" `
-                                                           | Where {$_.Message -match "The $svcDisplayName service entered" } } -ArgumentList $afterDate,$svcDisplayName
+                                                           | Where-Object {$_.Message -match "The $svcDisplayName service entered" } } -ArgumentList $afterDate,$svcDisplayName
                         If (!($restartEvents))
                             {
                                 Write-Host "There were no start/stop events for '$service' in the past $hoursToGoBack hours"
@@ -227,7 +227,7 @@ Function Get-CustomWarnErrEventByIndex($server,$eventLog,$previousIndexValue,$ev
         Write-Host "-------------------------------------------------------"
     }
     
-    Function Check-CustomServiceStatus($serviceName,$serverName)
+    Function Get-CustomServiceStatus($serviceName,$serverName)
     {
         Foreach ($server in $serverName)
             {
@@ -265,7 +265,7 @@ Function Get-CustomPercentMemoryUsed($serverName)
                     }
                 ElseIf ($percentmemused -ge 90 -and $percentmemused -le 100)
                     {
-                        $isSQLServer = Get-WmiObject -ComputerName $server Win32Reg_AddRemovePrograms | where {$_.DisplayName -match "Database Engine Services"}
+                        $isSQLServer = Get-WmiObject -ComputerName $server Win32Reg_AddRemovePrograms | Where-Object {$_.DisplayName -match "Database Engine Services"}
                         If (!($isSQLServer))
                             {
                                 Write-Host "Percent Memory Used - $percentmemused%`n" -ForegroundColor Red
