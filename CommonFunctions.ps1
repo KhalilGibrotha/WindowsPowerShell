@@ -104,7 +104,7 @@ Function Invoke-WindowsFeatureUnInstall($serverName,$windowsFeatureName)
                         Invoke-Command -ComputerName $server `
                                                         { 
                                                             param($Log,$AfterDateTime)
-                                                            Get-EventLog -LogName $Log -After $AfterDateTime | Where-Object {$_.EntryType -match "Warning|Critical"} | Group EntryType,Source | Sort-Object Count -Descending | Format-Table -AutoSize `
+                                                            Get-EventLog -LogName $Log -After $AfterDateTime | Where-Object {$_.EntryType -match "Warning|Critical"} | Group-Object EntryType,Source | Sort-Object Count -Descending | Format-Table -AutoSize `
                                                         } -ArgumentList $Log,$AfterDateTime
                                                         Clear-Variable serverName
                     }
@@ -176,7 +176,7 @@ Function Get-CustomWarnErrEventByIndex($server,$eventLog,$previousIndexValue,$ev
                     { 
                         $driveSize = $logicalDisk.Size
                         $freespace = $logicalDisk.FreeSpace
-                        $totalfreespace = $driveSize - $freespace
+                        i# $totalfreespace = $driveSize - $freespace
                         $percentFree = ($freespace / $drivesize)*100
                         If ($percentFree -le 15 -and $percentFree -ge 11)
                             {
@@ -327,16 +327,16 @@ Function Get-CustomPerfMonCounters($serverName,$CounterName,$intInterval)
 
 
 function Get-Permissions ($folder) {
-    (get-acl $folder).access | select `
+    (get-acl $folder).access | S `
           @{Label="Identity";Expression={$_.IdentityReference}}, `
           @{Label="Right";Expression={$_.FileSystemRights}}, `
           @{Label="Access";Expression={$_.AccessControlType}}, `
           @{Label="Inherited";Expression={$_.IsInherited}}, `
           @{Label="Inheritance Flags";Expression={$_.InheritanceFlags}}, `
-          @{Label="Propagation Flags";Expression={$_.PropagationFlags}} | ft -auto
+          @{Label="Propagation Flags";Expression={$_.PropagationFlags}} | Format-Table -auto
           }
           
-##SVN
+##SVN. Did I mention I dislike working with SVN?
 
 Function Get-SVNFileStatus($path)
     {
